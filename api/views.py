@@ -6,7 +6,7 @@ from rest_framework.views import APIView
 from rest_framework_jwt.views import JSONWebTokenAPIView
 
 from api.exceptions import AuthenticationFailed
-from api.models import User
+from project.models import User
 from api.serializers import UserSerializer
 from api.authentication import jwt_payload_handler, jwt_encode_handler
 
