@@ -1,11 +1,16 @@
 import jwt
 from django.contrib.auth import get_user_model
 
-from rest_framework.exceptions import AuthenticationFailed
+from authentication.exceptions import (
+    AuthenticationFailed,
+    ExpiredSignature,
+    InvalidSignature,
+    InvalidPayload,
+    DecodeSignature,
+    JWTTokenNotFound
+)
 from rest_framework_jwt.authentication import JSONWebTokenAuthentication
 from rest_framework_jwt.settings import api_settings
-
-from django.utils.translation import gettext_lazy as _
 
 jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
 jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
@@ -19,17 +24,14 @@ class CustomJWTAuthentication(JSONWebTokenAuthentication):
         token = self.get_jwt_value(request)
 
         if token is None:
-            msg = _('Authentication token has not been found')
-            raise AuthenticationFailed(msg)
+            raise JWTTokenNotFound()
 
         try:
             payload = jwt_decode_handler(token)
         except jwt.ExpiredSignature:
-            msg = _('Signature has expired.')
-            raise AuthenticationFailed(msg)
+            raise ExpiredSignature()
         except jwt.DecodeError:
-            msg = _('Error decoding signature.')
-            raise AuthenticationFailed(msg)
+            raise DecodeSignature()
         except jwt.InvalidTokenError:
             raise AuthenticationFailed()
         return self._authenticate_credentials(payload)
@@ -41,8 +43,6 @@ class CustomJWTAuthentication(JSONWebTokenAuthentication):
             try:
                 User.objects.get(username=username)
             except User.DoesNotExist:
-                msg = _('Invalid signature.')
-                raise AuthenticationFailed(msg)
+                raise InvalidSignature()
         else:
-            msg = _('Invalid payload.')
-            raise AuthenticationFailed(msg)
+            raise InvalidPayload()
