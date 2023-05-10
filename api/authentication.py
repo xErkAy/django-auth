@@ -19,7 +19,8 @@ class CustomJWTAuthentication(JSONWebTokenAuthentication):
         token = self.get_jwt_value(request)
 
         if token is None:
-            return None
+            msg = _('Authentication token has not been found')
+            raise AuthenticationFailed(msg)
 
         try:
             payload = jwt_decode_handler(token)
