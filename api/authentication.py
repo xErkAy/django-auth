@@ -34,15 +34,19 @@ class CustomJWTAuthentication(JSONWebTokenAuthentication):
             raise DecodeSignature()
         except jwt.InvalidTokenError:
             raise AuthenticationFailed()
-        return self._authenticate_credentials(payload)
+        
+        user = self._authenticate_credentials(payload)
+        return (user, token)
 
     def _authenticate_credentials(self, payload):
         User = get_user_model()
         username = jwt_get_username_from_payload(payload)
         if username:
             try:
-                User.objects.get(username=username)
+                user = User.objects.get(username=username)
             except User.DoesNotExist:
                 raise InvalidSignature()
         else:
             raise InvalidPayload()
+        
+        return user
